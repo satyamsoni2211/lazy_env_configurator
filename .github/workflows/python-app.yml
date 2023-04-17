@@ -34,14 +34,7 @@ jobs:
           poetry install
       - name: Running tests with Pytest
         run: |
-          poetry run coverage run -m pytest && poetry run coverage html
+          poetry run pytest
       - name: Lint with flake8
         run: |
           poetry run flake8 lazy_env_configurator
-      - name: upload_to_codecov
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-        run: |
-          curl -Os https://uploader.codecov.io/latest/linux/codecov
-          chmod +x codecov
-          ./codecov
