@@ -1,0 +1,51 @@
+[tool.poetry]
+name = "lazy_env_configurator"
+version = "0.1.0"
+description = "Dynamic Config Class Creation using Environment Variables"
+authors = ["satyam soni <satyam.soni@hotmail.co.uk>"]
+readme = "README.md"
+packages = [{include = "lazy_env_configurator"}]
+homepage = "https://github.com/satyamsoni2211/lazy_env_configurator"
+repository = "https://github.com/satyamsoni2211/lazy_env_configurator"
+license = "MIT"
+keywords = ["config", "environment", "variables", "env", "config", "class", "dynamic", "creation", "lazy-env-configurator", "python"]
+classifiers = [
+    "Framework :: FastAPI",
+    "Framework :: Flask",
+    "Framework :: Django",
+    "License :: Freeware",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: Implementation"
+]
+include= [
+    "README.md",
+    "CHANGELOG.md",
+    "test_lazy_env_configurator.py",
+    "reqirements.txt",
+    "requirements-test.txt",
+    "pytest.ini",
+    "tox.ini"
+]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+python-dotenv = "^1.0.0"
+
+
+[tool.poetry.group.dev.dependencies]
+autopep8 = "^2.0.2"
+
+
+[tool.poetry.group.test.dependencies]
+pytest = "^7.3.1"
+coverage = "^7.2.3"
+flake8 = "^6.0.0"
+tox = "^4.4.12"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

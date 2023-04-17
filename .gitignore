@@ -1,0 +1,7 @@
+.coverage
+htmlcov
+.vscode
+.tox
+**/*.pyc
+dist/
+.DS_Store
