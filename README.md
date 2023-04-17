@@ -3,6 +3,10 @@
 ---
 
 ![Github Builds](https://img.shields.io/github/actions/workflow/status/satyamsoni2211/lazy_env_configurator/python-app.yml?style=plastic)
+[![codecov](https://codecov.io/gh/satyamsoni2211/lazy_env_configurator/branch/main/graph/badge.svg?token=9C55EA99PF)](https://codecov.io/gh/satyamsoni2211/lazy_env_configurator)
+![Language Counts](https://img.shields.io/github/languages/count/satyamsoni2211/lazy_env_configurator)
+![Version](https://img.shields.io/pypi/v/lazy-env-configurator)
+![License](https://img.shields.io/github/license/satyamsoni2211/lazy_env_configurator)
 
 A utility library for Dynamic Config class generation. Now no more repeated boilerplate code...
 
