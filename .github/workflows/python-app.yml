@@ -19,6 +19,7 @@ jobs:
       fail-fast: true
       matrix:
         python-version: ["3.10", "3.9", "3.11"]
+    environment: production
 
     steps:
       - uses: actions/checkout@v3
