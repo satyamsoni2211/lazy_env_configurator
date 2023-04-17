@@ -34,7 +34,7 @@ jobs:
           poetry install
       - name: Running tests with Pytest
         run: |
-          poetry run pytest
+          poetry run coverage run -m pytest
       - name: Lint with flake8
         run: |
           poetry run flake8 lazy_env_configurator
