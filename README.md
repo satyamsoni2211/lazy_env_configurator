@@ -2,7 +2,7 @@
 
 ---
 
-![Github Builds](https://img.shields.io/github/actions/workflow/status/satyamsoni2211/lazy-env-configurator/python-app.yml?style=plastic)
+![Github Builds](https://img.shields.io/github/actions/workflow/status/satyamsoni2211/lazy_env_configurator/python-app.yml?style=plastic)
 
 A utility library for Dynamic Config class generation. Now no more repeated boilerplate code...
 
