@@ -27,7 +27,8 @@ include= [
     "reqirements.txt",
     "requirements-test.txt",
     "pytest.ini",
-    "tox.ini"
+    "tox.ini",
+    "LICENSE"
 ]
 
 [tool.poetry.dependencies]
