@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "lazy_env_configurator"
-version = "0.1.0"
+version = "0.2.0"
 description = "Dynamic Config Class Creation using Environment Variables"
 authors = ["satyam soni <satyam.soni@hotmail.co.uk>"]
 readme = "README.md"
@@ -23,7 +23,7 @@ classifiers = [
 include= [
     "README.md",
     "CHANGELOG.md",
-    "test_lazy_env_configurator.py",
+    "tests",
     "reqirements.txt",
     "requirements-test.txt",
     "pytest.ini",

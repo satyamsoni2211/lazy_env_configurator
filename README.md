@@ -53,8 +53,104 @@ class BaseConfig(BaseEnv):
 - env attributes can be overridden easily.
 - classes expose `instance` attribute preventing need to initialization and making it behave singleton.
 - Loads `.env` files by default so you only need to focus on essentials.
+- Self Contained Objects if you do not want to sanatise global env variables. `contained` attribute.
+
+### Components
+
+---
+
+- `BaseConfig`: Main Config class for library. This changes behavior of the container class.
+
+  - `envs`: `List` or `Tuple` of `env` variable to be populated as attributes in container class. Elements of iterable can be a `string` or `tuple` with first element as attribute name and second as `default`, second element Defaults to `None`. Eg:
+
+  ```python
+  class Config(Config_):
+        envs = ('APP',
+        'APP_ENV',
+        'DB_USERNAME',
+        'DB_PASSWORD',
+        'DB_PASSWORD',
+        'DB_HOST',
+        # defaults
+        ('DB_PORT',3306),
+        'DB_NAME',
+        'DB_DRIVER'
+        )
+  ```
+
+  - `dot_env_path`: Path to `.env` file. This can be a string or `pathlib.Path` object. defaults to `None`. Eg:
+
+  ```python
+  class Config(Config_):
+        dot_env_path = Path(__file__).parent/'.env'
+  ```
+
+  - `contained`: This variable is responsible for behaviour of the container. If this is set to `False`, all the `env` variables read from `.env` file would be populated to `os.environ` and available globally. If this is set to `True`, environment variables would only be contained in the container itself. This would help to create configuration containers with different env settings. It `contained` is set to true and no `.env` file is present, it raises `EnvWarning` and fallback to Environment variables. Eg:
+
+  ```python
+  class Config(BaseConfig):
+        envs = ("FOO", "APP")
+        dot_env_path = Path(__file__).parent / ".env.contained"
+        contained = True
+  ```
+
+- `BaseEnv`: This class will be used as a `Base Class` for all the containers. It uses `EnvMeta` as metaclass to populate `env` variables as attributes on Container Class. Eg:
+
+  ```python
+  from lazy_env_configurator import BaseEnv, BaseConfig as Config_
+  class BaseConfig(BaseEnv):
+      class Config(Config_):
+          envs = ('APP',
+          'APP_ENV',
+          'DB_USERNAME',
+          'DB_PASSWORD',
+          'DB_PASSWORD',
+          'DB_HOST',
+          # defaults
+          ('DB_PORT',3306),
+          'DB_NAME',
+          'DB_DRIVER'
+          )
+  ```
+
+  > Note: `Config` class is optional. If not provided, it will not load any env variables.
+  > `Config` class won't be available as an attribute on the child class.
+
+- `EnvMeta`: Metaclass for populating env variables
+  as class attributes to the child class.
+  if the child class has a Config class, it will
+  be used to populate the env variables.
+
+  by default, the env variables are populated on first access
+  and cached for subsequent access. This can be overriden by
+  setting the value on the instance.
+
+  if the env variable is not set, it uses the default value provided.
+
+  This class also initializes the instance of the child class and
+  make it available as `instance` attribute on the child class. So it can be accessed as
+  `ChildClass.instance`.
+
+  ```python
+  Example:
+
+  class ABC(BaseEnv):
+    def generate_uri(self):
+        return f'{self.DB_HOST}:{self.DB_PORT}'
+    class Config(BaseConfig):
+        envs = ('dev', ('test', 'test_value'),
+                'prd', 'DB_HOST', 'DB_PORT')
+        dot_env_path = Path(__file__).parent / '.env.test'
+
+    >>> # access env variables
+    >>> ABC.instance.dev
+    >>> ABC.instance.test
+    >>> ABC.instance.prd
+  ```
 
 ### How to use
+
+---
 
 Let us refer below example:
 
@@ -78,7 +174,7 @@ class BaseConfig(BaseEnv):
 We can now use `BaseConfig` class create as below.
 
 ```python
->>>BaseConfig.instance.APP
+>>> BaseConfig.instance.APP
 ```
 
 Every class, subclassed from `BaseEnv` would expose `.instance` attribute which will be instance of the subclass. This instance can be used to access all the attributes on the class.

@@ -1,7 +1,10 @@
 import os
 import dotenv
+import warnings
+from pathlib import Path
 from dataclasses import dataclass
 from typing import Iterable, Union
+from .custom_warnings import EnvWarning
 
 
 @dataclass(frozen=True)
@@ -14,9 +17,13 @@ class BaseConfig:
         If the element is a tuple, the first element is the name of the env variable and the
         second element is the default value.
     - `dot_env_path` (typing.Union[str, 'os.PathLike[str]']): Path to the .env file
+    - `contained` (bool): If True, the env variables loaded from the .env file will be contained within instance and
+     not set as env variables.
+     This is helpful when you do not want to populate global env variables and maintain a clean env.
     """
     envs: Iterable[Union[tuple[str, str], str]] = tuple()
     dot_env_path: Union[str, 'os.PathLike[str]'] = None
+    contained: bool = False
 
 
 class Env(object):
@@ -26,6 +33,7 @@ class Env(object):
     If the env variable is not set, it uses the default value provided.
     Values can be overriden by setting the value on the instance.
     """
+    __slots__ = ('__name', '__value', '__default', '__calculated')
 
     def __init__(self, default=None):
         """
@@ -38,16 +46,21 @@ class Env(object):
         self.__name = None
         self.__value = None
         self.__default = default
+        # flag to check if the value is already calculated
+        self.__calculated = False
 
-    def __get__(self, *_):
+    def __get__(self, instance, obj_type=None):
         '''
         descriptor __get__ method
 
         Returns:
             typing.Any: value of the env variable
         '''
-        if not self.__value:
-            self.__value = os.getenv(self.__name, self.__default)
+        contained_ = getattr(instance, '__contained__', {})
+        # using the cached value if already calculated
+        if not self.__calculated:
+            self.__value = contained_.get(self.__name) or os.getenv(self.__name, self.__default)
+            self.__calculated = True
         return self.__value
 
     def __set__(self, _, value):
@@ -90,17 +103,58 @@ class EnvMeta(type):
         >>> ABC.instance.prd
     """
     def __new__(mcs, name, bases, attrs: dict):
-        config_attrs = attrs.pop('Config', None)
+        config_attrs = attrs.pop('Config', BaseConfig)  # type: BaseConfig
         if config_attrs:
+            mcs.validate_envs(config_attrs)
             # patching the class attrs with env variables
             attrs.update(mcs.process_config_attrs(config_attrs))
+            mcs.validate_dotenv_path(config_attrs)
             # loading env variables from file
             dot_env_path = getattr(config_attrs, 'dot_env_path', None)
-            dotenv.load_dotenv(dot_env_path)
+            if not config_attrs.contained:
+                dotenv.load_dotenv(dot_env_path)
+            else:
+                __contained__ = dotenv.dotenv_values(dot_env_path)
+                if __contained__:
+                    attrs['__contained__'] = __contained__
+                else:
+                    warnings.warn(
+                        ('Cannot Contain, No env variables found in dot env or no'
+                         ' dot env file present or specified. This option should be used'
+                         ' exclusively with the .env files. '),
+                        EnvWarning)
         cls_ = super().__new__(mcs, name, bases, attrs)
         # initializing the instance
         cls_.instance = cls_()
         return cls_
+
+    def validate_envs(config_attrs: BaseConfig):
+        """
+        Function to validate the config attributes
+
+        Args:
+            config_attrs (BaseConfig): Attributes of the config class
+
+        Raises:
+            TypeError: If envs is not an iterable
+        """
+        if not isinstance(config_attrs.envs, (tuple, list)):
+            raise TypeError('envs should be an iterable, either tuple or list')
+
+    def validate_dotenv_path(config_attrs: BaseConfig):
+        """
+        Function to validate the config attributes
+
+        Args:
+            config_attrs (BaseConfig): _description_
+
+        Raises:
+            FileNotFoundError: _description_
+        """
+        if config_attrs.dot_env_path:
+            path_ = Path(config_attrs.dot_env_path)
+            if not path_.exists():
+                raise FileNotFoundError(f'File not found at {path_}')
 
     def process_config_attrs(config_attrs: BaseConfig) -> dict[str, Env]:
         """
