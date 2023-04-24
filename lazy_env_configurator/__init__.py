@@ -23,6 +23,10 @@ class BaseConfig:
     - `contained` (bool): If True, the env variables loaded from the .env file will be contained within instance and
      not set as env variables.
      This is helpful when you do not want to populate global env variables and maintain a clean env.
+    - `validations` (typing.Dict[str, ValidationOptions]): Dict of validations to be applied to the env variables.
+        The key of the dict is the name of the env variable and the value is the validation options.
+        The validation options are the same as the pydantic field info.
+    - `eagerly_validate` (bool): If True, the env variables will be validated on class creation.
     """
     envs: Iterable[Union[tuple[str, str], str]] = tuple()
     dot_env_path: Union[str, 'os.PathLike[str]'] = None
