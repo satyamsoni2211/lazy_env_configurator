@@ -2,7 +2,6 @@ import os
 import dotenv
 import warnings
 from pathlib import Path
-from .custom_warnings import EnvWarning
 from .validations import ValidationOptions
 from .env import Env
 from pydantic.fields import FieldInfo
@@ -21,7 +20,7 @@ class BaseConfig:
         second element is the default value.
     - `dot_env_path` (typing.Union[str, 'os.PathLike[str]']): Path to the .env file
     - `contained` (bool): If True, the env variables loaded from the .env file will be contained within instance and
-     not set as env variables.
+     not set as env variables. default: True
      This is helpful when you do not want to populate global env variables and maintain a clean env.
     - `validations` (typing.Dict[str, ValidationOptions]): Dict of validations to be applied to the env variables.
         The key of the dict is the name of the env variable and the value is the validation options.
@@ -30,7 +29,7 @@ class BaseConfig:
     """
     envs: Iterable[Union[tuple[str, str], str]] = tuple()
     dot_env_path: Union[str, 'os.PathLike[str]'] = None
-    contained: bool = False
+    contained: bool = True
     validations: Dict[str, ValidationOptions] = {}
     eagerly_validate: bool = False
 
@@ -81,12 +80,6 @@ class EnvMeta(type):
                 __contained__ = dotenv.dotenv_values(dot_env_path)
                 if __contained__:
                     attrs['__contained__'] = __contained__
-                else:
-                    warnings.warn(
-                        ('Cannot Contain, No env variables found in dot env or no'
-                         ' dot env file present or specified. This option should be used'
-                         ' exclusively with the .env files. '),
-                        EnvWarning)
             # patching the class attrs with env variables
             env_attr_ = mcs.process_config_attrs(config_attrs)
             if config_attrs.eagerly_validate:

@@ -26,15 +26,3 @@ class TestInvalidEnv(TestCase):
 
     def test_is_contained(self):
         self.assertTrue(hasattr(self.t_, "__contained__"))
-
-    def test_empty_contained(self):
-        with warns(EnvWarning) as w:
-            class ContainedEnv(BaseEnv):
-                class Config(BaseConfig):
-                    envs = ("FOO", "APP")
-                    contained = True
-        message_ = w.list[0].message
-        self.assertIsInstance(message_, EnvWarning)
-        self.assertEqual(str(message_), ('\'Cannot Contain, No env variables found in dot env or no'
-                         ' dot env file present or specified. This option should be used'
-                                         ' exclusively with the .env files. \''))
