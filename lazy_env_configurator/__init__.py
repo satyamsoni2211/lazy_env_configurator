@@ -89,7 +89,7 @@ class EnvMeta(type):
                 errs_ = []
                 name_space_, __annotations__ = {}, {}
                 for k, v in env_attr_.items():
-                    _, errors_ = v.validate(name, __contained__)
+                    _, errors_ = v.validate(name, contained=__contained__)
                     if errors_:
                         name_space_[k] = FieldInfo(default=v.default, **v.extras)
                         __annotations__[k] = v.type
@@ -98,9 +98,10 @@ class EnvMeta(type):
                         else:
                             errs_.append(errors_)
                 name_space_['__annotations__'] = __annotations__
-                raise ValidationError(errors=errs_,
-                                      model=type(name, (BaseModel,),
-                                                 name_space_))
+                if errs_:
+                    raise ValidationError(errors=errs_,
+                                          model=type(name, (BaseModel,),
+                                                     name_space_))
             attrs.update(env_attr_)
         cls_ = super().__new__(mcs, name, bases, attrs)
         # initializing the instance

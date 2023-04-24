@@ -54,7 +54,10 @@ class Env(object):
         )
         return m_
 
-    def validate(self, model: Optional[str], value: Any = None, contained: dict = {}) -> Tuple[Any, Tuple[Optional[Any], Optional[ErrorList]]]:
+    def validate(self, model: Optional[str],
+                 *,
+                 value: Any = None,
+                 contained: dict = {}) -> Tuple[Any, Tuple[Optional[Any], Optional[ErrorList]]]:
         val = value or (contained.get(self.name) or os.getenv(self.name, self.default))
         v_, errors = self.validator.validate(val,
                                              {},
@@ -73,12 +76,13 @@ class Env(object):
         # using the cached value if already calculated
         if not self.__calculated:
             instance_name_ = instance.__class__.__name__
-            v_ = self.get_validated_value(instance_name_, contained=contained_)
+            v_ = self.get_validated_value(instance_name_,
+                                          contained=contained_)
             self.value = v_
             self.__calculated = True
         return self.value
 
-    def get_validated_value(self, instance_name_: str, /, value: Any = None, contained: dict = {}):
+    def get_validated_value(self, instance_name_: str, *, value: Any = None, contained: dict = {}):
         v_, errors = self.validate(instance_name_, value=value, contained=contained)
         if errors:
             error = ValidationError(errors=[errors], model=type(instance_name_, (BaseModel,), {
