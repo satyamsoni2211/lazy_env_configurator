@@ -67,36 +67,36 @@ class BaseConfig(BaseEnv):
 
   - `envs`: `List` or `Tuple` of `env` variable to be populated as attributes in container class. Elements of iterable can be a `string` or `tuple` with first element as attribute name and second as `default`, second element Defaults to `None`. Eg:
 
-  ```python
-  class Config(Config_):
-        envs = ('APP',
-        'APP_ENV',
-        'DB_USERNAME',
-        'DB_PASSWORD',
-        'DB_PASSWORD',
-        'DB_HOST',
-        # defaults
-        ('DB_PORT',3306),
-        'DB_NAME',
-        'DB_DRIVER'
-        )
-  ```
+    ```python
+    class Config(Config_):
+          envs = ('APP',
+          'APP_ENV',
+          'DB_USERNAME',
+          'DB_PASSWORD',
+          'DB_PASSWORD',
+          'DB_HOST',
+          # defaults
+          ('DB_PORT',3306),
+          'DB_NAME',
+          'DB_DRIVER'
+          )
+    ```
 
   - `dot_env_path`: Path to `.env` file. This can be a string or `pathlib.Path` object. defaults to `None`. Eg:
 
-  ```python
-  class Config(Config_):
-        dot_env_path = Path(__file__).parent/'.env'
-  ```
+    ```python
+    class Config(Config_):
+          dot_env_path = Path(__file__).parent/'.env'
+    ```
 
   - `contained`: This variable is responsible for behaviour of the container. If this is set to `False`, all the `env` variables read from `.env` file would be populated to `os.environ` and available globally. If this is set to `True`, environment variables would only be contained in the container itself. This would help to create configuration containers with different env settings. It `contained` is set to true and no `.env` file is present, it will fallback to Environment variables. default `True`. Eg:
 
-  ```python
-  class Config(BaseConfig):
-        envs = ("FOO", "APP")
-        dot_env_path = Path(__file__).parent / ".env.contained"
-        contained = True
-  ```
+    ```python
+    class Config(BaseConfig):
+          envs = ("FOO", "APP")
+          dot_env_path = Path(__file__).parent / ".env.contained"
+          contained = True
+    ```
 
   - `validations`: Dict of validations to be applied to the env variables.
     The key of the dict is the name of the env variable and the value is the validation options.
@@ -161,24 +161,24 @@ class BaseConfig(BaseEnv):
 
     > Setting this flag to True does not populate value of the elements if validation fails.
 
-  ```python
-    class Abc(BaseEnv):
-      class Config(BaseConfig):
-          envs = ('dev', 'test')
-          validations = {
-              'dev': {
-                  "alias": "dev",
-                  "gt": 4,
-                  "type": int,
-                  "required": True
-              },
-              'test': {
-                  "type": HttpUrl,
-                  'required': False
-              },
-          }
-          eagerly_validate = True
-  ```
+    ```python
+      class Abc(BaseEnv):
+        class Config(BaseConfig):
+            envs = ('dev', 'test')
+            validations = {
+                'dev': {
+                    "alias": "dev",
+                    "gt": 4,
+                    "type": int,
+                    "required": True
+                },
+                'test': {
+                    "type": HttpUrl,
+                    'required': False
+                },
+            }
+            eagerly_validate = True
+    ```
 
   Above will validate all the envs on class creation and will raise and error if any mis validations found.
 
