@@ -89,7 +89,7 @@ class BaseConfig(BaseEnv):
         dot_env_path = Path(__file__).parent/'.env'
   ```
 
-  - `contained`: This variable is responsible for behaviour of the container. If this is set to `False`, all the `env` variables read from `.env` file would be populated to `os.environ` and available globally. If this is set to `True`, environment variables would only be contained in the container itself. This would help to create configuration containers with different env settings. It `contained` is set to true and no `.env` file is present, it raises `EnvWarning` and fallback to Environment variables. Eg:
+  - `contained`: This variable is responsible for behaviour of the container. If this is set to `False`, all the `env` variables read from `.env` file would be populated to `os.environ` and available globally. If this is set to `True`, environment variables would only be contained in the container itself. This would help to create configuration containers with different env settings. It `contained` is set to true and no `.env` file is present, it will fallback to Environment variables. default `True`. Eg:
 
   ```python
   class Config(BaseConfig):
@@ -97,6 +97,90 @@ class BaseConfig(BaseEnv):
         dot_env_path = Path(__file__).parent / ".env.contained"
         contained = True
   ```
+
+  - `validations`: Dict of validations to be applied to the env variables.
+    The key of the dict is the name of the env variable and the value is the validation options.
+    The validation options are the same as the pydantic field info.
+
+    > This is a dictionary of key as `environment Variables` and value as `lazy_env_configurator.validations:ValidationOptions`. These are all the arguments that are passed for [Field Customisations](https://docs.pydantic.dev/usage/schema/#field-customization). This supports auto completion.
+
+    ```python
+    class Abc(BaseEnv):
+      class Config(BaseConfig):
+          envs = ('dev', 'test')
+          validations = {
+              'dev': {
+                  "alias": "dev",
+                  "gt": 4,
+                  "type": int,
+                  "required": True
+              },
+              'test': {
+                  "type": HttpUrl,
+                  'required': False
+              },
+          }
+    ```
+
+    Above would resolve `dev` to `int` type and validate if it is greater than `4` and is not None. Similarly, it will check it `test` is not `None` and is a valid `Url`.
+
+    Valid Validation Options:
+
+    - `default`: since this is replacing the field’s default, its first argument is used
+      to set the default, use ellipsis (`...`) to indicate the field is required
+    - `alias`: the public name of the field
+    - `title`: can be any string, used in the schema
+    - `description`: can be any string, used in the schema
+    - `gt`: only applies to numbers, requires the field to be "greater than". The schema
+      will have an `exclusiveMinimum` validation keyword
+    - `ge`: only applies to numbers, requires the field to be "greater than or equal to". The
+      schema will have a `minimum` validation keyword
+    - `lt`: only applies to numbers, requires the field to be "less than". The schema
+      will have an `exclusiveMaximum` validation keyword
+    - `le`: only applies to numbers, requires the field to be "less than or equal to". The
+      schema will have a `maximum` validation keyword
+    - `multiple_of`: only applies to numbers, requires the field to be "a multiple of". The
+      schema will have a `multipleOf` validation keyword
+    - `allow_inf_nan`: only applies to numbers, allows the field to be NaN or infinity (+inf or -inf),
+      which is a valid Python float. Default True, set to False for compatibility with JSON.
+    - `max_digits`: only applies to Decimals, requires the field to have a maximum number
+      of digits within the decimal. It does not include a zero before the decimal point or trailing decimal zeroes.
+    - `decimal_places`: only applies to Decimals, requires the field to have at most a number of decimal places
+      allowed. It does not include trailing decimal zeroes.
+    - `min_length`: only applies to strings, requires the field to have a minimum length. The
+      schema will have a `minLength` validation keyword
+    - `max_length`: only applies to strings, requires the field to have a maximum length. The
+      schema will have a `maxLength` validation keyword
+    - `allow_mutation`: a boolean which defaults to True. When False, the field raises a TypeError if the field is
+      assigned on an instance. The BaseModel Config must set validate_assignment to True
+    - `regex`: only applies to strings, requires the field match against a regular expression
+      pattern string. The schema will have a `pattern` validation keyword
+    - `repr`: show this field in the representation
+
+  - `eagerly_validate`: If True, the env variables will be validated on class creation, else will be validated when accessed. By default, Metaclass does not validate `env variables` of class creation for its lazy behaviour.
+
+    > Setting this flag to True does not populate value of the elements if validation fails.
+
+  ```python
+    class Abc(BaseEnv):
+      class Config(BaseConfig):
+          envs = ('dev', 'test')
+          validations = {
+              'dev': {
+                  "alias": "dev",
+                  "gt": 4,
+                  "type": int,
+                  "required": True
+              },
+              'test': {
+                  "type": HttpUrl,
+                  'required': False
+              },
+          }
+          eagerly_validate = True
+  ```
+
+  Above will validate all the envs on class creation and will raise and error if any mis validations found.
 
 - `BaseEnv`: This class will be used as a `Base Class` for all the containers. It uses `EnvMeta` as metaclass to populate `env` variables as attributes on Container Class. Eg:
 
@@ -115,6 +199,17 @@ class BaseConfig(BaseEnv):
           'DB_NAME',
           'DB_DRIVER'
           )
+          # validations for envs
+          validations = {
+              'DB_PORT': {
+                  "type": int,
+                  "required": True
+              },
+              'DB_HOST': {
+                  "type": str,
+                  'required': True
+              },
+          }
   ```
 
   > Note: `Config` class is optional. If not provided, it will not load any env variables.
@@ -138,13 +233,25 @@ class BaseConfig(BaseEnv):
   ```python
   Example:
 
-  class ABC(BaseEnv):
+  class ABC(metaclass=EnvMeta):
+    # will create and populate env properties on ABC
     def generate_uri(self):
         return f'{self.DB_HOST}:{self.DB_PORT}'
     class Config(BaseConfig):
         envs = ('dev', ('test', 'test_value'),
                 'prd', 'DB_HOST', 'DB_PORT')
         dot_env_path = Path(__file__).parent / '.env.test'
+        # validations for envs
+        validations = {
+              'DB_PORT': {
+                  "type": int,
+                  "required": True
+              },
+              'DB_HOST': {
+                  "type": str,
+                  'required': True
+              },
+          }
 
     >>> # access env variables
     >>> ABC.instance.dev
@@ -173,6 +280,27 @@ class BaseConfig(BaseEnv):
         'DB_NAME',
         'DB_DRIVER'
         )
+
+        # validations for envs
+          validations = {
+              'DB_PORT': {
+                  "type": int,
+                  "required": True
+              },
+              'DB_HOST': {
+                  "type": str,
+                  'required': True
+              },
+          }
+
+          # path to dotenv file, automatically detects .env
+          # dot_env_path = pathlib.Path(__file__).parent / ".env.sample"
+
+          # Validates of class creation if set to True
+          # eagerly_validate = True
+
+          # if True, Keeps env contained else propogates to global env
+          # contained = True
 ```
 
 We can now use `BaseConfig` class create as below.
