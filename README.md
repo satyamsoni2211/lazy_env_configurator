@@ -318,3 +318,11 @@ Every class, subclassed from `BaseEnv` would expose `.instance` attribute which 
 ---
 
 `lazy_env_configurator` uses `descriptors` under the hood to dynamically populate env variables as attributes, thus making them available on demand, `Lazily`.
+
+All the Validations are done using [`Pydantic`](https://docs.pydantic.dev/) Library. Validation Errors are `Pydantic ValidationError` Instances that can be caught and JSON serialised if required.
+
+---
+
+Made with Love by [@satyamsoni](https://github.com/satyamsoni2211/) .
+
+> Follow me on: [![Twitter](https://img.shields.io/badge/Twitter-1DA1F2.svg?style=for-the-badge&logo=Twitter&logoColor=whitehttps://img.shields.io/twitter/follow/_satyamsoni_?style=social)](https://twitter.com/_satyamsoni_) [![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2.svg?style=for-the-badge&logo=LinkedIn&logoColor=white)](https://www.linkedin.com/in/-satyamsoni/) [![Github](https://img.shields.io/badge/GitHub-181717.svg?style=for-the-badge&logo=GitHub&logoColor=white)](https://github.com/satyamsoni2211)
