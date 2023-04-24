@@ -92,6 +92,9 @@ class Env(object):
     def __set__(self, instance, value):
         val_ = self.get_validated_value(instance.__class__.__name__, value=value)
         self.value = val_
+        # marking this as calculated
+        # otherwise this recalculates the value
+        self.__calculated = True
 
     def __set_name__(self, _, name):
         self.name = name
