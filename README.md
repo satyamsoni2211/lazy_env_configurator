@@ -321,6 +321,28 @@ Every class, subclassed from `BaseEnv` would expose `.instance` attribute which 
 
 All the Validations are done using [`Pydantic`](https://docs.pydantic.dev/) Library. Validation Errors are `Pydantic ValidationError` Instances that can be caught and JSON serialised if required.
 
+### Contribution
+
+---
+
+Thank you for considering to help out with the source code! We welcome any contributions no matter how small they are!
+
+If you'd like to contribute to `lazy_env_configurator`, please fork, fix, commit and send a pull request for the maintainers to review and merge into the main code base.
+
+Please make sure your contributions adhere to our coding guidelines:
+
+- Code must adhere to the official [Python Formatting](https://peps.python.org/pep-0008/) guidelines.
+- Code must be documented adhering to the official Python [Documentation](https://devguide.python.org/documentation/) guidelines.
+- Pull requests need to be based on and opened against the `master` branch.
+- Open an issue before submitting a PR for non-breaking changes.
+- Publish a VEP proposal before submitting a PR for breaking changes.
+
+### License
+
+---
+
+The go-vite source code is licensed under [MIT](https://opensource.org/license/mit/), also included in the `LICENSE` file.
+
 ---
 
 Made with Love by [@satyamsoni](https://github.com/satyamsoni2211/) .
