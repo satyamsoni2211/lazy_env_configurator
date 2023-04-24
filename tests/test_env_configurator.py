@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from pytest import raises
 from unittest import TestCase
+from pydantic.error_wrappers import ValidationError
 from lazy_env_configurator import BaseEnv, BaseConfig
 
 os.environ.setdefault('prd', 'prd_value')
@@ -15,6 +16,19 @@ class ABC(BaseEnv):
     class Config(BaseConfig):
         envs = ('dev', ('test', 'test_value'), 'prd', 'DB_HOST', 'DB_PORT')
         dot_env_path = Path(__file__).parent / '.env.test'
+        validations = {
+            'dev': {
+                'alias': 'dev',
+                'type': str,
+                'required': True,
+                'min_length': 5
+            },
+            'DB_HOST': {
+                'required': True,
+                'type': str,
+                'min_length': 5
+            }
+        }
 
 
 class EmptyBase(BaseEnv):
@@ -28,10 +42,17 @@ class TestEnvMeta(TestCase):
         self.e_ = EmptyBase.instance
 
     def test_dev(self):
-        self.assertIsNone(self.t_.dev)
-        self.t_.dev = "wow"
-        # checking overwriting
-        self.assertEqual(self.t_.dev, 'wow')
+        with raises(ValidationError) as e:
+            self.assertIsNone(self.t_.dev)
+        self.assertIsInstance(e.value, ValidationError)
+
+    def test_invalid_dev_value(self):
+        with raises(ValidationError) as e:
+            self.t_.dev = "wow"
+            # checking overwriting
+            self.assertEqual(self.t_.dev, 'wow')
+        self.assertIsInstance(e.value, ValidationError)
+        self.assertIn("ensure this value has at least 5 characters", str(e.value))
 
     def test_test(self):
         self.assertEqual(self.t_.test, 'test_value')

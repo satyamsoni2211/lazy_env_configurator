@@ -2,12 +2,15 @@ import os
 import dotenv
 import warnings
 from pathlib import Path
-from dataclasses import dataclass
-from typing import Iterable, Union
 from .custom_warnings import EnvWarning
+from .validations import ValidationOptions
+from .env import Env
+from pydantic.fields import FieldInfo
+from typing import Iterable, Union, Dict, Optional, Sequence
+from pydantic.error_wrappers import ValidationError
+from pydantic import BaseModel
 
 
-@dataclass(frozen=True)
 class BaseConfig:
     """
     Base Config required for env creation
@@ -24,50 +27,8 @@ class BaseConfig:
     envs: Iterable[Union[tuple[str, str], str]] = tuple()
     dot_env_path: Union[str, 'os.PathLike[str]'] = None
     contained: bool = False
-
-
-class Env(object):
-    """
-    Env descriptor for env variables. This class populates env
-    variables on first access and caches the value for subsequent access.
-    If the env variable is not set, it uses the default value provided.
-    Values can be overriden by setting the value on the instance.
-    """
-    __slots__ = ('__name', '__value', '__default', '__calculated')
-
-    def __init__(self, default=None):
-        """
-        Initalizer for Env
-        Captures the default value and name of the env variable
-
-        Args:
-            default (typing.Any, optional): Default to override in case of unset Env. Defaults to None.
-        """
-        self.__name = None
-        self.__value = None
-        self.__default = default
-        # flag to check if the value is already calculated
-        self.__calculated = False
-
-    def __get__(self, instance, obj_type=None):
-        '''
-        descriptor __get__ method
-
-        Returns:
-            typing.Any: value of the env variable
-        '''
-        contained_ = getattr(instance, '__contained__', {})
-        # using the cached value if already calculated
-        if not self.__calculated:
-            self.__value = contained_.get(self.__name) or os.getenv(self.__name, self.__default)
-            self.__calculated = True
-        return self.__value
-
-    def __set__(self, _, value):
-        self.__value = value
-
-    def __set_name__(self, _, name):
-        self.__name = name
+    validations: Dict[str, ValidationOptions] = {}
+    eagerly_validate: bool = False
 
 
 class EnvMeta(type):
@@ -106,11 +67,10 @@ class EnvMeta(type):
         config_attrs = attrs.pop('Config', BaseConfig)  # type: BaseConfig
         if config_attrs:
             mcs.validate_envs(config_attrs)
-            # patching the class attrs with env variables
-            attrs.update(mcs.process_config_attrs(config_attrs))
             mcs.validate_dotenv_path(config_attrs)
             # loading env variables from file
             dot_env_path = getattr(config_attrs, 'dot_env_path', None)
+            __contained__ = {}
             if not config_attrs.contained:
                 dotenv.load_dotenv(dot_env_path)
             else:
@@ -123,6 +83,25 @@ class EnvMeta(type):
                          ' dot env file present or specified. This option should be used'
                          ' exclusively with the .env files. '),
                         EnvWarning)
+            # patching the class attrs with env variables
+            env_attr_ = mcs.process_config_attrs(config_attrs)
+            if config_attrs.eagerly_validate:
+                errs_ = []
+                name_space_, __annotations__ = {}, {}
+                for k, v in env_attr_.items():
+                    _, errors_ = v.validate(name, __contained__)
+                    if errors_:
+                        name_space_[k] = FieldInfo(default=v.default, **v.extras)
+                        __annotations__[k] = v.type
+                        if isinstance(errors_, Sequence):
+                            errs_.extend(errors_)
+                        else:
+                            errs_.append(errors_)
+                name_space_['__annotations__'] = __annotations__
+                raise ValidationError(errors=errs_,
+                                      model=type(name, (BaseModel,),
+                                                 name_space_))
+            attrs.update(env_attr_)
         cls_ = super().__new__(mcs, name, bases, attrs)
         # initializing the instance
         cls_.instance = cls_()
@@ -167,13 +146,27 @@ class EnvMeta(type):
         Returns:
             _type_: _description_
         """
+        validation_map = config_attrs.validations
+        default_type = Optional[str]
         c_ = {}
         for attr_name in getattr(config_attrs, 'envs', tuple()):
             name_ = attr_name
             default_ = None
             if isinstance(attr_name, (tuple, list)):
                 [name_, default_] = attr_name
-            c_[name_] = Env(default_)
+            validation_kwargs = validation_map.get(name_, {})
+            default_ = default_ or validation_kwargs.pop('default', None)
+            # selecting the type of the env variable
+            required_ = validation_kwargs.get('required', False)
+            type_ = validation_kwargs.pop('type', default_type)
+            if required_ and type_ is default_type:
+                warnings.warn(
+                    f"Optional types cannot be required. {default_type}, will update required to False."
+                )
+                validation_kwargs['required'] = False
+            env_ = Env(default_, type_=type_, **validation_kwargs)
+            env_.__set_name__(None, name_)
+            c_[name_] = env_
         return c_
 
 
