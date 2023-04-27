@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "lazy_env_configurator"
-version = "0.2.0"
+version = "0.3.0-alpha"
 description = "Dynamic Config Class Creation using Environment Variables"
 authors = ["satyam soni <satyam.soni@hotmail.co.uk>"]
 readme = "README.md"
@@ -34,6 +34,7 @@ include= [
 [tool.poetry.dependencies]
 python = "^3.9"
 python-dotenv = "^1.0.0"
+pydantic = "^1.10.7"
 
 
 [tool.poetry.group.dev.dependencies]
