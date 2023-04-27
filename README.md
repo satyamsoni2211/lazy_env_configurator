@@ -341,7 +341,13 @@ Please make sure your contributions adhere to our coding guidelines:
 
 ---
 
-The go-vite source code is licensed under [MIT](https://opensource.org/license/mit/), also included in the `LICENSE` file.
+The `lazy-env-configurator` source code is licensed under [MIT](https://opensource.org/license/mit/), also included in the `LICENSE` file.
+
+### CHANGELOG
+
+---
+
+To check what changed, please refer [CHANGELOG](CHANGELOG.md).
 
 ---
 
