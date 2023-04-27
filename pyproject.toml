@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "lazy_env_configurator"
-version = "0.2.0"
+version = "0.3.0-alpha"
 description = "Dynamic Config Class Creation using Environment Variables"
 authors = ["satyam soni <satyam.soni@hotmail.co.uk>"]
 readme = "README.md"
